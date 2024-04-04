@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <title>Font Awesome</title>
+  <!-- # Use CSS for Unicode -->
+  <!-- <link rel="stylesheet" href="fonts/v6.5.2/css/all.css"> -->
+  <!-- <link rel="stylesheet" href="fonts/v6.5.2/css/all-sharp.css"> -->
+  <!-- # Use JS for SVG -->
+  <script src="fonts/v6.5.2/js/all.js"></script>
+  <script src="fonts/v6.5.2/js/all-sharp.js"></script>
+</head>
+<body style="display: flex; justify-content: center; margin: 0; box-sizing: border-box; background-color: #112236;">
+  <main
+    style="font-family: Arial, Helvetica, sans-serif; width: 630px; min-width: 630px; height: 100%; min-height: 100vh; box-sizing: border-box; background-color: aliceblue; padding: 20px; border-radius: 16px;">
+    <a href="https://fontawesome.com/search" target="_blank">https://fontawesome.com</a>
+    <div style="font-size: 6rem; line-height: 0; margin-bottom: 20px;">
+      <i class="fa-solid fa-envelope"></i>
+      <i class="fa-regular fa-envelope"></i>
+      <i class="fa-light fa-envelope"></i>
+      <i class="fa-thin fa-envelope"></i>
+      <i class="fa-duotone fa-envelope"></i>
+      <div style="font-size: 1.2rem; line-height: 1; margin-bottom: 10px; display: flex; text-align: center;"><span
+          style="flex-basis: 17%;">solid</span> <span style="flex-basis: 23%;">regular</span> <span
+          style="flex-basis: 20%;">light</span> <span style="flex-basis: 23%;">thin</span> <span
+          style="flex-basis: 17%;">duotone</span></div>
+
+      <i class="fa-sharp fa-solid fa-envelope"></i>
+      <i class="fa-sharp fa-regular fa-envelope"></i>
+      <i class="fa-sharp fa-light fa-envelope"></i>
+      <i class="fa-sharp fa-thin fa-envelope"></i>
+      <i class="fa-brands fa-github"></i>
+      <div style="font-size: 1.2rem; line-height: 1; margin-bottom: 10px; display: flex; text-align: center;"><span
+          style="flex-basis: 17%;">sharp-solid</span> <span style="flex-basis: 23%;">sharp-regular</span> <span
+          style="flex-basis: 20%;">sharp-light</span> <span style="flex-basis: 22%;">sharp-thin</span> <span
+          style="flex-basis: 18%;">brands</span></div>
+    </div>
+
+    <div>
+      <div style="margin-bottom: 10px;">
+        <label for="code-snippet" style="font-size: 1.2rem; display: block; margin-bottom: 6px;">
+          Paste Font Awesome code snippet &lt;i>:
+        </label>
+        <input type="button" value="Clear" id="clear-btn" style="font-size: 1rem; padding: 4px;">
+        <input type="text" spellcheck="false" placeholder="&lt;i class=&quot;fa-solid fa-envelope&quot;>&lt;/i>"
+          id="code-snippet" style="width: 435px; padding: 4px; font-size: 1rem;">
+        <a href="" type="button" id="download-btn"
+          style="font-size: 1rem; padding: 5px; text-decoration: none; border: 1px solid; border-radius: 3px;">Download</a>
+      </div>
+      <div id="svg-container" style="font-size: 15rem; text-align: center;">
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const codeSnippet = document.getElementById('code-snippet');
+    const downloadBtn = document.getElementById('download-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const svgContainer = document.getElementById('svg-container');
+
+    function delay(ms) {
+      return new Promise(resolve => {
+        setTimeout(resolve, ms);
+      });
+    }
+
+    async function eventHandler(event) {
+      try {
+        svgContainer.innerHTML = event.target.value;
+        const svgTypes = ['sharp|solid', 'sharp|regular', 'sharp|light', 'sharp|thin', 'solid', 'regular', 'light', 'thin', 'duotone', 'brands']
+        let svgType = '';
+        for (let type of svgTypes) {
+          let x = String(event.target.value).match(new RegExp(`${type}`, 'g'))
+          if ((x && x.length) === 2) {
+            svgType = x.join('-')
+            break
+          } else if (x) {
+            svgType = x.join('')
+          }
+        }
+        await delay(50);
+        const svg = document.querySelector('#svg-container>svg').cloneNode(true);
+        const path = svg.getElementsByTagName('path');
+
+        let svgStyles = svg.getAttribute('style') ? svg.getAttribute('style').replace(/;$/, '').split(/;\s?/g).map(s => s.split(/:\s?/)) : [];
+        for (let i = 0; i < path.length; i++) {
+          // path[i].setAttribute('fill', 'black');
+          if (!path[i].classList.value && svgStyles.length) {
+            svgStyles.forEach((svgStyle) => {
+              if (svgStyle[0] === 'color') path[i].setAttribute('fill', svgStyle[1])
+            })
+          }
+          path[i].classList.forEach((pathClass) => {
+            if (path[i].classList.contains('fa-secondary')) {
+              path[i].setAttribute('opacity', '0.4')
+            }
+            svgStyles.forEach((svgStyle) => {
+              let key = svgStyle[0].replace(/^--|-\w+$/g, '')
+              let value = svgStyle[0].replace(`--${key}-`, '')
+              if (pathClass === key) {
+                if (value === 'color') path[i].setAttribute('fill', svgStyle[1])
+                if (value === 'opacity') path[i].setAttribute('opacity', svgStyle[1])
+              }
+            })
+          })
+          // path[i].removeAttribute('class');
+        }
+
+        svg.setAttribute('class', `fa-${svg.getAttribute('data-icon')}`);
+        svg.removeAttribute('style');
+        svg.removeAttribute('role');
+        svg.removeAttribute('aria-hidden');
+        svg.removeAttribute('focusable');
+        svg.removeAttribute('data-prefix');
+        svg.removeAttribute('data-fa-i2svg');
+        const svgXML = (new XMLSerializer).serializeToString(svg);
+        const fileName = `${svg.getAttribute('data-icon')}_${svgType}.svg`
+        const svgBlob = new Blob([svgXML], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        downloadBtn.href = svgUrl;
+        downloadBtn.download = fileName;
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
+    codeSnippet.addEventListener('change', eventHandler)
+    codeSnippet.addEventListener('paste', async (event) => {
+      await delay(100);
+      await eventHandler(event);
+    })
+
+    clearBtn.addEventListener('click', (event) => {
+      event.preventDefault()
+      codeSnippet.value = ''
+    })
+  </script>
+</body>
+</html>
